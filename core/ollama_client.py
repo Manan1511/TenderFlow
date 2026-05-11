@@ -7,8 +7,6 @@ Provides a health check and the main analysis generation call.
 
 from __future__ import annotations
 
-import requests
-
 from core.utils import parse_strict_json
 
 # ---------------------------------------------------------------------------
@@ -61,6 +59,8 @@ def check_ollama_connection() -> bool:
         True  if the server responds with HTTP 200.
         False if the connection fails for any reason.
     """
+    import requests
+
     try:
         response = requests.get(
             OLLAMA_BASE_URL,
@@ -106,6 +106,8 @@ def generate_analysis(parsed_text: str) -> dict:
         requests.Timeout: If the request exceeds REQUEST_TIMEOUT_SECONDS.
         ValueError: If the response JSON is malformed or incomplete.
     """
+    import requests
+
     safe_text, was_truncated = _truncate_text(parsed_text)
 
     payload = {

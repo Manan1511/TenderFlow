@@ -12,19 +12,8 @@ interleaving table data at the correct vertical position within each page.
 from __future__ import annotations
 
 import gc
-import io
-from typing import NamedTuple
-
-import fitz  # PyMuPDF
-import pdfplumber
 
 from core.utils import TABLE_PADDING_PX
-
-
-class _TableBlock(NamedTuple):
-    """Holds a table's vertical midpoint and its CSV-formatted content."""
-    y_mid: float
-    content: str
 
 
 def _table_to_text(table: list[list[str | None]]) -> str:
@@ -60,6 +49,10 @@ def parse_pdf(pdf_path: str) -> str:
         RuntimeError:      If the PDF cannot be opened or parsed.
     """
     full_content_parts: list[str] = []
+
+    # Lazy-load heavy C-extension libraries — only when the user starts an analysis
+    import fitz  # PyMuPDF
+    import pdfplumber
 
     with pdfplumber.open(pdf_path) as plumber_doc:
         fitz_doc = fitz.open(pdf_path)

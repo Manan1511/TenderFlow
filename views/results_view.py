@@ -26,7 +26,6 @@ from core.utils import (
     COLOR_SUCCESS,
     COLOR_TEXT_PRIMARY,
     COLOR_TEXT_SECONDARY,
-    COLOR_WARNING,
     export_results_to_pdf,
     get_font,
 )

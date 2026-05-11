@@ -169,10 +169,6 @@ class TenderAnalyzerApp:
         # Health check debounce timestamp
         self._last_health_check: float = 0.0
 
-        # Lazy view flags — defer heavy widget trees until first use
-        self._processing_view_built: bool = False
-        self._results_view_built: bool = False
-
         self._setup_layout()
         self._build_views()
         self._check_ollama_async()

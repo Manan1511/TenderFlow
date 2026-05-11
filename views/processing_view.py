@@ -15,7 +15,6 @@ The main app drives state transitions via update_step() and set_progress().
 
 from __future__ import annotations
 
-import time
 from typing import Callable, Literal
 
 import customtkinter as ctk
