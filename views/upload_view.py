@@ -47,6 +47,7 @@ class UploadView(ctk.CTkFrame):
         self._selected_pdf: str = ""
         self._engine_status_label: ctk.CTkLabel
         self._engine_dot: ctk.CTkLabel
+        self._file_icon_label: ctk.CTkLabel
         self._file_name_label: ctk.CTkLabel
         self._analyze_btn: ctk.CTkButton
 
@@ -159,14 +160,36 @@ class UploadView(ctk.CTkFrame):
             command=self._handle_browse,
         ).grid(row=3, column=0, pady=(0, 36))
 
-        # Selected file name
-        self._file_name_label = ctk.CTkLabel(
+        # --- Selected file badge ---
+        badge = ctk.CTkFrame(
             card,
-            text="No file selected.",
-            font=ctk.CTkFont(size=11),
-            text_color=COLOR_TEXT_SECONDARY,
+            fg_color="#0f1923",
+            border_color=COLOR_CARD_BORDER,
+            border_width=1,
+            corner_radius=20,
         )
-        self._file_name_label.grid(row=2, column=0, pady=(0, 6))
+        badge.grid(row=2, column=0, sticky="ew", padx=20, pady=(0, 8))
+        badge.grid_columnconfigure(1, weight=1)
+
+        self._file_icon_label = ctk.CTkLabel(
+            badge,
+            text="○",
+            font=ctk.CTkFont(size=14),
+            text_color=COLOR_TEXT_SECONDARY,
+            width=20,
+        )
+        self._file_icon_label.grid(row=0, column=0, padx=(14, 6), pady=10)
+
+        self._file_name_label = ctk.CTkLabel(
+            badge,
+            text="No file selected",
+            font=ctk.CTkFont(size=12),
+            text_color=COLOR_TEXT_SECONDARY,
+            anchor="w",
+            wraplength=360,
+            justify="left",
+        )
+        self._file_name_label.grid(row=0, column=1, sticky="w", padx=(0, 14), pady=10)
 
         # Analyze Tender button
         self._analyze_btn = ctk.CTkButton(
@@ -288,8 +311,11 @@ class UploadView(ctk.CTkFrame):
         if path:
             self._selected_pdf = path
             file_name = os.path.basename(path)
+            # Update badge to "selected" state
+            self._file_icon_label.configure(text="●", text_color=COLOR_SUCCESS)
             self._file_name_label.configure(
-                text=f"Selected: {file_name}", text_color=COLOR_TEXT_PRIMARY
+                text=file_name,
+                text_color=COLOR_TEXT_PRIMARY,
             )
             self._analyze_btn.configure(state="normal")
 
