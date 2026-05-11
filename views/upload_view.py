@@ -3,10 +3,9 @@ views/upload_view.py
 
 Dashboard / Upload screen.
 
-Layout (mirrors mock screen 3):
+Layout:
   Left card  — Document upload zone with Browse button + selected file name
   Right card — Ollama engine status indicator
-  Bottom     — Recent analysis placeholder table + "Analyze Tender" CTA
 """
 
 from __future__ import annotations
@@ -52,7 +51,7 @@ class UploadView(ctk.CTkFrame):
         self._analyze_btn: ctk.CTkButton
 
         self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(2, weight=1)
+        self.grid_rowconfigure(1, weight=1)
         self._build()
 
     # ------------------------------------------------------------------
@@ -95,9 +94,6 @@ class UploadView(ctk.CTkFrame):
 
         self._build_upload_card(cards_frame)
         self._build_status_card(cards_frame)
-
-        # ---- Recent Analysis table ----
-        self._build_recent_table()
 
     def _build_upload_card(self, parent: ctk.CTkFrame) -> None:
         """Left card: upload drop-zone and browse button."""
@@ -262,60 +258,6 @@ class UploadView(ctk.CTkFrame):
             justify="left",
         ).grid(row=5, column=0, sticky="w", padx=20, pady=(0, 20))
 
-    def _build_recent_table(self) -> None:
-        """Recent analysis placeholder table."""
-        section = ctk.CTkFrame(
-            self,
-            fg_color=COLOR_CARD_BG,
-            border_color=COLOR_CARD_BORDER,
-            border_width=1,
-            corner_radius=12,
-        )
-        section.grid(row=2, column=0, sticky="nsew", padx=36, pady=(0, 28))
-        section.grid_columnconfigure(0, weight=1)
-
-        header_row = ctk.CTkFrame(section, fg_color="transparent")
-        header_row.grid(row=0, column=0, sticky="ew", padx=20, pady=(16, 8))
-        header_row.grid_columnconfigure(0, weight=1)
-
-        ctk.CTkLabel(
-            header_row,
-            text="Recent Analysis",
-            font=ctk.CTkFont(size=14, weight="bold"),
-            text_color=COLOR_TEXT_PRIMARY,
-        ).grid(row=0, column=0, sticky="w")
-
-        # Column headers
-        col_frame = ctk.CTkFrame(section, fg_color="#0a0f15", corner_radius=0)
-        col_frame.grid(row=1, column=0, sticky="ew")
-        col_frame.grid_columnconfigure((0, 1, 2, 3), weight=1)
-
-        for col_idx, col_name in enumerate(["File Name", "Upload Date", "Size", "Status"]):
-            ctk.CTkLabel(
-                col_frame,
-                text=col_name,
-                font=ctk.CTkFont(size=10, weight="bold"),
-                text_color=COLOR_TEXT_SECONDARY,
-            ).grid(row=0, column=col_idx, sticky="w", padx=16, pady=8)
-
-        # Sample rows (decorative, showing what the UI will look like)
-        sample_rows = [
-            ("No recent analysis found.", "", "", ""),
-        ]
-
-        for row_idx, (name, date, size, status) in enumerate(sample_rows):
-            row_bg = COLOR_CARD_BG if row_idx % 2 == 0 else "#0f1520"
-            row_frame = ctk.CTkFrame(section, fg_color=row_bg, corner_radius=0)
-            row_frame.grid(row=row_idx + 2, column=0, sticky="ew")
-            row_frame.grid_columnconfigure((0, 1, 2, 3), weight=1)
-
-            for col_idx, cell_text in enumerate([name, date, size, status]):
-                ctk.CTkLabel(
-                    row_frame,
-                    text=cell_text,
-                    font=ctk.CTkFont(size=11),
-                    text_color=COLOR_TEXT_SECONDARY,
-                ).grid(row=0, column=col_idx, sticky="w", padx=16, pady=10)
 
     # ------------------------------------------------------------------
     # Public API
