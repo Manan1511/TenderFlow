@@ -32,7 +32,6 @@ class SidebarFrame(ctk.CTkFrame):
     _NAV_ITEMS: list[tuple[str, str]] = [
         ("dashboard", "⊞  Dashboard"),
         ("analysis",  "⟳  Analysis"),
-        ("outreach",  "✉  Outreach"),
     ]
 
     _BOTTOM_ITEMS: list[tuple[str, str]] = [
@@ -88,14 +87,6 @@ class SidebarFrame(ctk.CTkFrame):
             text_color=COLOR_TEXT_PRIMARY,
         )
         title_label.grid(row=0, column=1, sticky="w", padx=(10, 0))
-
-        tier_label = ctk.CTkLabel(
-            branding_frame,
-            text="Enterprise Tier",
-            font=ctk.CTkFont(size=10),
-            text_color=COLOR_TEXT_SECONDARY,
-        )
-        tier_label.grid(row=1, column=1, sticky="w", padx=(10, 0))
 
         # --- Primary CTA ---
         cta_button = ctk.CTkButton(

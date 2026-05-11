@@ -98,8 +98,8 @@ class ResultsView(ctk.CTkFrame):
             border_width=2,
         )
 
-        tab_analysis = tab_view.add("  📊  Analysis  ")
-        tab_outreach = tab_view.add("  ✉️  Outreach  ")
+        tab_analysis = tab_view.add("  Analysis  ")
+        tab_outreach = tab_view.add("  Outreach  ")
 
         tab_analysis.grid_columnconfigure(0, weight=1)
         tab_analysis.grid_rowconfigure(1, weight=1)
