@@ -29,6 +29,7 @@ from core.utils import (
     COLOR_SUCCESS,
     COLOR_TEXT_PRIMARY,
     COLOR_TEXT_SECONDARY,
+    get_font,
 )
 
 StepState = Literal["pending", "active", "done", "error"]
@@ -110,21 +111,21 @@ class ProcessingView(ctk.CTkFrame):
         ctk.CTkLabel(
             card,
             text="📋",
-            font=ctk.CTkFont(size=48),
+            font=get_font(size=48),
         ).grid(row=0, column=0, pady=(36, 8))
 
         # Title
         ctk.CTkLabel(
             card,
             text="Analyzing Document...",
-            font=ctk.CTkFont(size=22, weight="bold"),
+            font=get_font(size=22, weight="bold"),
             text_color=COLOR_TEXT_PRIMARY,
         ).grid(row=1, column=0)
 
         ctk.CTkLabel(
             card,
             text="Extracting requirements using Gemma AI",
-            font=ctk.CTkFont(size=12),
+            font=get_font(size=12),
             text_color=COLOR_TEXT_SECONDARY,
         ).grid(row=2, column=0, pady=(4, 20))
 
@@ -136,14 +137,14 @@ class ProcessingView(ctk.CTkFrame):
         ctk.CTkLabel(
             prog_row,
             text="Overall Progress",
-            font=ctk.CTkFont(size=11),
+            font=get_font(size=11),
             text_color=COLOR_TEXT_SECONDARY,
         ).grid(row=0, column=0, sticky="w")
 
         self._progress_label = ctk.CTkLabel(
             prog_row,
             text="0%",
-            font=ctk.CTkFont(size=11, weight="bold"),
+            font=get_font(size=11, weight="bold"),
             text_color=COLOR_ACCENT_BLUE,
         )
         self._progress_label.grid(row=0, column=1, sticky="e")
@@ -178,7 +179,7 @@ class ProcessingView(ctk.CTkFrame):
             icon_lbl = ctk.CTkLabel(
                 row_frame,
                 text=_STEP_ICONS["pending"],
-                font=ctk.CTkFont(size=13, weight="bold"),
+                font=get_font(size=13, weight="bold"),
                 text_color=_STEP_COLORS["pending"],
                 width=24,
             )
@@ -188,7 +189,7 @@ class ProcessingView(ctk.CTkFrame):
             text_lbl = ctk.CTkLabel(
                 row_frame,
                 text=label,
-                font=ctk.CTkFont(size=11, family="Courier New"),
+                font=get_font(size=11, family="Courier New"),
                 text_color=_STEP_COLORS["pending"],
                 anchor="w",
             )
@@ -198,7 +199,7 @@ class ProcessingView(ctk.CTkFrame):
             time_lbl = ctk.CTkLabel(
                 row_frame,
                 text="Pending",
-                font=ctk.CTkFont(size=10),
+                font=get_font(size=10),
                 text_color=COLOR_TEXT_SECONDARY,
                 width=70,
             )
@@ -209,7 +210,7 @@ class ProcessingView(ctk.CTkFrame):
         ctk.CTkButton(
             card,
             text="Cancel Analysis",
-            font=ctk.CTkFont(size=12),
+            font=get_font(size=12),
             fg_color="transparent",
             border_color=COLOR_CARD_BORDER,
             border_width=1,

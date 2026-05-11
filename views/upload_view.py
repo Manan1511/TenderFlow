@@ -24,6 +24,7 @@ from core.utils import (
     COLOR_SUCCESS,
     COLOR_TEXT_PRIMARY,
     COLOR_TEXT_SECONDARY,
+    get_font,
 )
 
 
@@ -68,21 +69,21 @@ class UploadView(ctk.CTkFrame):
         ctk.CTkLabel(
             header_frame,
             text="TenderFlow Pro",
-            font=ctk.CTkFont(size=22, weight="bold"),
+            font=get_font(size=22, weight="bold"),
             text_color=COLOR_ACCENT_BLUE,
         ).grid(row=0, column=0, sticky="w")
 
         ctk.CTkLabel(
             header_frame,
             text="Data Ingestion",
-            font=ctk.CTkFont(size=22, weight="bold"),
+            font=get_font(size=22, weight="bold"),
             text_color=COLOR_TEXT_PRIMARY,
         ).grid(row=1, column=0, sticky="w", pady=(8, 0))
 
         ctk.CTkLabel(
             header_frame,
             text="Upload new tender specifications or RFPs for automated parsing and compliance check.",
-            font=ctk.CTkFont(size=12),
+            font=get_font(size=12),
             text_color=COLOR_TEXT_SECONDARY,
         ).grid(row=2, column=0, sticky="w", pady=(4, 0))
 
@@ -111,7 +112,7 @@ class UploadView(ctk.CTkFrame):
         ctk.CTkLabel(
             card,
             text="Document Upload",
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=get_font(size=14, weight="bold"),
             text_color=COLOR_TEXT_PRIMARY,
         ).grid(row=0, column=0, sticky="w", padx=20, pady=(18, 0))
 
@@ -131,27 +132,27 @@ class UploadView(ctk.CTkFrame):
         ctk.CTkLabel(
             drop_zone,
             text="📄",
-            font=ctk.CTkFont(size=40),
+            font=get_font(size=40),
         ).grid(row=0, column=0, pady=(36, 6))
 
         ctk.CTkLabel(
             drop_zone,
             text="Select a PDF Tender File",
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=get_font(size=14, weight="bold"),
             text_color=COLOR_TEXT_PRIMARY,
         ).grid(row=1, column=0)
 
         ctk.CTkLabel(
             drop_zone,
             text="Maximum file size: 50 MB. Supported format: PDF.",
-            font=ctk.CTkFont(size=11),
+            font=get_font(size=11),
             text_color=COLOR_TEXT_SECONDARY,
         ).grid(row=2, column=0, pady=(2, 16))
 
         ctk.CTkButton(
             drop_zone,
             text="Browse Files",
-            font=ctk.CTkFont(size=12, weight="bold"),
+            font=get_font(size=12, weight="bold"),
             fg_color=COLOR_ACCENT_BLUE,
             hover_color="#1a5dc8",
             corner_radius=8,
@@ -174,7 +175,7 @@ class UploadView(ctk.CTkFrame):
         self._file_icon_label = ctk.CTkLabel(
             badge,
             text="○",
-            font=ctk.CTkFont(size=14),
+            font=get_font(size=14),
             text_color=COLOR_TEXT_SECONDARY,
             width=20,
         )
@@ -183,7 +184,7 @@ class UploadView(ctk.CTkFrame):
         self._file_name_label = ctk.CTkLabel(
             badge,
             text="No file selected",
-            font=ctk.CTkFont(size=12),
+            font=get_font(size=12),
             text_color=COLOR_TEXT_SECONDARY,
             anchor="w",
             wraplength=360,
@@ -195,7 +196,7 @@ class UploadView(ctk.CTkFrame):
         self._analyze_btn = ctk.CTkButton(
             card,
             text="Analyze Tender  →",
-            font=ctk.CTkFont(size=13, weight="bold"),
+            font=get_font(size=13, weight="bold"),
             fg_color=COLOR_ACCENT_BLUE,
             hover_color="#1a5dc8",
             corner_radius=8,
@@ -220,7 +221,7 @@ class UploadView(ctk.CTkFrame):
         ctk.CTkLabel(
             card,
             text="Engine Status",
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=get_font(size=14, weight="bold"),
             text_color=COLOR_TEXT_PRIMARY,
         ).grid(row=0, column=0, sticky="w", padx=20, pady=(18, 6))
 
@@ -236,7 +237,7 @@ class UploadView(ctk.CTkFrame):
         self._engine_dot = ctk.CTkLabel(
             status_row,
             text="●",
-            font=ctk.CTkFont(size=14),
+            font=get_font(size=14),
             text_color=COLOR_TEXT_SECONDARY,
         )
         self._engine_dot.grid(row=0, column=0, padx=(0, 6))
@@ -244,7 +245,7 @@ class UploadView(ctk.CTkFrame):
         self._engine_status_label = ctk.CTkLabel(
             status_row,
             text="Checking...",
-            font=ctk.CTkFont(size=11),
+            font=get_font(size=11),
             text_color=COLOR_TEXT_SECONDARY,
         )
         self._engine_status_label.grid(row=0, column=1, sticky="w")
@@ -262,13 +263,13 @@ class UploadView(ctk.CTkFrame):
             ctk.CTkLabel(
                 stats_frame,
                 text=label,
-                font=ctk.CTkFont(size=10),
+                font=get_font(size=10),
                 text_color=COLOR_TEXT_SECONDARY,
             ).grid(row=0, column=col, sticky="w")
             ctk.CTkLabel(
                 stats_frame,
                 text=value,
-                font=ctk.CTkFont(size=15, weight="bold"),
+                font=get_font(size=15, weight="bold"),
                 text_color=COLOR_TEXT_PRIMARY,
             ).grid(row=1, column=col, sticky="w")
 
@@ -276,7 +277,7 @@ class UploadView(ctk.CTkFrame):
         ctk.CTkLabel(
             card,
             text="Model: gemma4:e4b\nEndpoint: localhost:11434",
-            font=ctk.CTkFont(size=10),
+            font=get_font(size=10),
             text_color=COLOR_TEXT_SECONDARY,
             justify="left",
         ).grid(row=5, column=0, sticky="w", padx=20, pady=(0, 20))

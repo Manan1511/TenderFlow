@@ -18,6 +18,7 @@ from core.utils import (
     COLOR_TEXT_PRIMARY,
     COLOR_TEXT_SECONDARY,
     SIDEBAR_WIDTH,
+    get_font,
 )
 
 
@@ -75,7 +76,7 @@ class SidebarFrame(ctk.CTkFrame):
         logo_label = ctk.CTkLabel(
             branding_frame,
             text="⬡",
-            font=ctk.CTkFont(size=28, weight="bold"),
+            font=get_font(size=28, weight="bold"),
             text_color=COLOR_ACCENT_BLUE,
         )
         logo_label.grid(row=0, column=0, sticky="w")
@@ -83,7 +84,7 @@ class SidebarFrame(ctk.CTkFrame):
         title_label = ctk.CTkLabel(
             branding_frame,
             text="Precision Engine",
-            font=ctk.CTkFont(size=14, weight="bold"),
+            font=get_font(size=14, weight="bold"),
             text_color=COLOR_TEXT_PRIMARY,
         )
         title_label.grid(row=0, column=1, sticky="w", padx=(10, 0))
@@ -92,7 +93,7 @@ class SidebarFrame(ctk.CTkFrame):
         cta_button = ctk.CTkButton(
             self,
             text="＋  New Tender Analysis",
-            font=ctk.CTkFont(size=12, weight="bold"),
+            font=get_font(size=12, weight="bold"),
             fg_color=COLOR_ACCENT_BLUE,
             hover_color="#1a5dc8",
             corner_radius=8,
@@ -110,7 +111,7 @@ class SidebarFrame(ctk.CTkFrame):
             btn = ctk.CTkButton(
                 nav_frame,
                 text=label,
-                font=ctk.CTkFont(size=12),
+                font=get_font(size=12),
                 anchor="w",
                 corner_radius=6,
                 height=38,
@@ -140,7 +141,7 @@ class SidebarFrame(ctk.CTkFrame):
             btn = ctk.CTkButton(
                 bottom_frame,
                 text=label,
-                font=ctk.CTkFont(size=11),
+                font=get_font(size=11),
                 anchor="w",
                 corner_radius=6,
                 height=34,

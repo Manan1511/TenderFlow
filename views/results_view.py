@@ -28,6 +28,7 @@ from core.utils import (
     COLOR_TEXT_SECONDARY,
     COLOR_WARNING,
     export_results_to_pdf,
+    get_font,
 )
 
 
@@ -92,7 +93,7 @@ class ResultsView(ctk.CTkFrame):
 
         # Enlarge the segmented button bar for better visibility
         tab_view._segmented_button.configure(
-            font=ctk.CTkFont(size=13, weight="bold"),
+            font=get_font(size=13, weight="bold"),
             height=40,
             corner_radius=8,
             border_width=2,
@@ -120,7 +121,7 @@ class ResultsView(ctk.CTkFrame):
         ctk.CTkLabel(
             left,
             text="ACTIVE ANALYSIS",
-            font=ctk.CTkFont(size=9, weight="bold"),
+            font=get_font(size=9, weight="bold"),
             text_color=COLOR_ACCENT_BLUE,
             fg_color="#1c2d4a",
             corner_radius=4,
@@ -131,7 +132,7 @@ class ResultsView(ctk.CTkFrame):
         ctk.CTkLabel(
             left,
             text="Tender Analysis Results",
-            font=ctk.CTkFont(size=22, weight="bold"),
+            font=get_font(size=22, weight="bold"),
             text_color=COLOR_TEXT_PRIMARY,
         ).grid(row=1, column=0, sticky="w", pady=(6, 0))
 
@@ -141,7 +142,7 @@ class ResultsView(ctk.CTkFrame):
         ctk.CTkButton(
             right,
             text="Export Report (PDF)",
-            font=ctk.CTkFont(size=11),
+            font=get_font(size=11),
             fg_color="transparent",
             border_color=COLOR_CARD_BORDER,
             border_width=1,
@@ -155,7 +156,7 @@ class ResultsView(ctk.CTkFrame):
         ctk.CTkButton(
             right,
             text="New Analysis",
-            font=ctk.CTkFont(size=11, weight="bold"),
+            font=get_font(size=11, weight="bold"),
             fg_color=COLOR_ACCENT_BLUE,
             hover_color="#1a5dc8",
             corner_radius=8,
@@ -190,7 +191,7 @@ class ResultsView(ctk.CTkFrame):
         ctk.CTkLabel(
             fin_frame,
             text="⬡  Financial Requirements",
-            font=ctk.CTkFont(size=13, weight="bold"),
+            font=get_font(size=13, weight="bold"),
             text_color=COLOR_TEXT_PRIMARY,
         ).grid(row=0, column=0, columnspan=3, sticky="w", padx=16, pady=(14, 6))
 
@@ -205,14 +206,14 @@ class ResultsView(ctk.CTkFrame):
         ctk.CTkLabel(
             emd_col,
             text="EARNEST MONEY DEPOSIT (EMD)",
-            font=ctk.CTkFont(size=9, weight="bold"),
+            font=get_font(size=9, weight="bold"),
             text_color=COLOR_TEXT_SECONDARY,
         ).grid(row=0, column=0, sticky="w")
 
         self._emd_label = ctk.CTkLabel(
             emd_col,
             text="—",
-            font=ctk.CTkFont(size=28, weight="bold"),
+            font=get_font(size=28, weight="bold"),
             text_color=COLOR_TEXT_PRIMARY,
         )
         self._emd_label.grid(row=1, column=0, sticky="w")
@@ -220,7 +221,7 @@ class ResultsView(ctk.CTkFrame):
         ctk.CTkLabel(
             emd_col,
             text="Refundable post-award",
-            font=ctk.CTkFont(size=10),
+            font=get_font(size=10),
             text_color=COLOR_TEXT_SECONDARY,
         ).grid(row=2, column=0, sticky="w")
 
@@ -236,14 +237,14 @@ class ResultsView(ctk.CTkFrame):
         ctk.CTkLabel(
             proc_col,
             text="TENDER PROCESSING FEE",
-            font=ctk.CTkFont(size=9, weight="bold"),
+            font=get_font(size=9, weight="bold"),
             text_color=COLOR_TEXT_SECONDARY,
         ).grid(row=0, column=0, sticky="w")
 
         self._proc_fee_label = ctk.CTkLabel(
             proc_col,
             text="—",
-            font=ctk.CTkFont(size=28, weight="bold"),
+            font=get_font(size=28, weight="bold"),
             text_color=COLOR_TEXT_PRIMARY,
         )
         self._proc_fee_label.grid(row=1, column=0, sticky="w")
@@ -251,7 +252,7 @@ class ResultsView(ctk.CTkFrame):
         ctk.CTkLabel(
             proc_col,
             text="Non-refundable",
-            font=ctk.CTkFont(size=10),
+            font=get_font(size=10),
             text_color=COLOR_TEXT_SECONDARY,
         ).grid(row=2, column=0, sticky="w")
 
@@ -271,7 +272,7 @@ class ResultsView(ctk.CTkFrame):
         ctk.CTkLabel(
             card,
             text="☑  Compliance Checklist",
-            font=ctk.CTkFont(size=13, weight="bold"),
+            font=get_font(size=13, weight="bold"),
             text_color=COLOR_TEXT_PRIMARY,
         ).grid(row=0, column=0, sticky="w", padx=16, pady=(14, 6))
 
@@ -306,7 +307,7 @@ class ResultsView(ctk.CTkFrame):
         ctk.CTkLabel(
             card,
             text="≡  Extracted Supply Requirements",
-            font=ctk.CTkFont(size=13, weight="bold"),
+            font=get_font(size=13, weight="bold"),
             text_color=COLOR_TEXT_PRIMARY,
         ).grid(row=0, column=0, sticky="w", padx=16, pady=(14, 6))
 
@@ -346,21 +347,21 @@ class ResultsView(ctk.CTkFrame):
         ctk.CTkLabel(
             header_row,
             text="Email Outreach Draft",
-            font=ctk.CTkFont(size=15, weight="bold"),
+            font=get_font(size=15, weight="bold"),
             text_color=COLOR_TEXT_PRIMARY,
         ).grid(row=0, column=0, sticky="w")
 
         ctk.CTkLabel(
             header_row,
             text="● Draft Generated",
-            font=ctk.CTkFont(size=10),
+            font=get_font(size=10),
             text_color=COLOR_SUCCESS,
         ).grid(row=0, column=1, sticky="e")
 
         ctk.CTkLabel(
             left_card,
             text="Review the generated documentation request before dispatching to the manufacturer.",
-            font=ctk.CTkFont(size=11),
+            font=get_font(size=11),
             text_color=COLOR_TEXT_SECONDARY,
             wraplength=420,
             justify="left",
@@ -369,7 +370,7 @@ class ResultsView(ctk.CTkFrame):
         # Email textbox
         self._email_box = ctk.CTkTextbox(
             left_card,
-            font=ctk.CTkFont(size=11, family="Courier New"),
+            font=get_font(size=11, family="Courier New"),
             fg_color="#060a0f",
             border_color=COLOR_CARD_BORDER,
             border_width=1,
@@ -386,7 +387,7 @@ class ResultsView(ctk.CTkFrame):
         ctk.CTkButton(
             btn_row,
             text="📋  Copy Email",
-            font=ctk.CTkFont(size=12, weight="bold"),
+            font=get_font(size=12, weight="bold"),
             fg_color=COLOR_ACCENT_BLUE,
             hover_color="#1a5dc8",
             corner_radius=8,
@@ -409,7 +410,7 @@ class ResultsView(ctk.CTkFrame):
         ctk.CTkLabel(
             right_card,
             text="Requested Documents",
-            font=ctk.CTkFont(size=13, weight="bold"),
+            font=get_font(size=13, weight="bold"),
             text_color=COLOR_TEXT_PRIMARY,
         ).grid(row=0, column=0, sticky="w", padx=16, pady=(14, 6))
 
@@ -495,7 +496,7 @@ class ResultsView(ctk.CTkFrame):
         ctk.CTkLabel(
             scroll,
             text="MANUFACTURER DOCUMENTS",
-            font=ctk.CTkFont(size=9, weight="bold"),
+            font=get_font(size=9, weight="bold"),
             text_color=COLOR_TEXT_SECONDARY,
         ).grid(row=row_cursor, column=0, sticky="w", padx=6, pady=(8, 2))
         row_cursor += 1
@@ -508,7 +509,7 @@ class ResultsView(ctk.CTkFrame):
             ctk.CTkLabel(
                 scroll,
                 text="None specified.",
-                font=ctk.CTkFont(size=10),
+                font=get_font(size=10),
                 text_color=COLOR_TEXT_SECONDARY,
             ).grid(row=row_cursor, column=0, sticky="w", padx=10, pady=2)
             row_cursor += 1
@@ -523,7 +524,7 @@ class ResultsView(ctk.CTkFrame):
         ctk.CTkLabel(
             scroll,
             text="BIDDER DOCUMENTS",
-            font=ctk.CTkFont(size=9, weight="bold"),
+            font=get_font(size=9, weight="bold"),
             text_color=COLOR_TEXT_SECONDARY,
         ).grid(row=row_cursor, column=0, sticky="w", padx=6, pady=(8, 2))
         row_cursor += 1
@@ -536,7 +537,7 @@ class ResultsView(ctk.CTkFrame):
             ctk.CTkLabel(
                 scroll,
                 text="None specified.",
-                font=ctk.CTkFont(size=10),
+                font=get_font(size=10),
                 text_color=COLOR_TEXT_SECONDARY,
             ).grid(row=row_cursor, column=0, sticky="w", padx=10, pady=2)
 
@@ -560,7 +561,7 @@ class ResultsView(ctk.CTkFrame):
         ctk.CTkLabel(
             row,
             text="○",
-            font=ctk.CTkFont(size=14),
+            font=get_font(size=14),
             text_color=COLOR_TEXT_SECONDARY,
             width=24,
         ).grid(row=0, column=0, padx=(10, 6), pady=8)
@@ -568,7 +569,7 @@ class ResultsView(ctk.CTkFrame):
         ctk.CTkLabel(
             row,
             text=text,
-            font=ctk.CTkFont(size=11),
+            font=get_font(size=11),
             text_color=COLOR_TEXT_PRIMARY,
             anchor="w",
             wraplength=300,
@@ -583,7 +584,7 @@ class ResultsView(ctk.CTkFrame):
             ctk.CTkLabel(
                 frame,
                 text="None specified.",
-                font=ctk.CTkFont(size=10),
+                font=get_font(size=10),
                 text_color=COLOR_TEXT_SECONDARY,
             ).grid(row=0, column=0, sticky="w", padx=8, pady=4)
             return
@@ -600,7 +601,7 @@ class ResultsView(ctk.CTkFrame):
             ctk.CTkLabel(
                 row,
                 text=f"{idx + 1:02d}",
-                font=ctk.CTkFont(size=10, weight="bold"),
+                font=get_font(size=10, weight="bold"),
                 text_color=COLOR_ACCENT_BLUE,
                 width=28,
             ).grid(row=0, column=0, padx=(10, 6), pady=8)
@@ -608,7 +609,7 @@ class ResultsView(ctk.CTkFrame):
             ctk.CTkLabel(
                 row,
                 text=item,
-                font=ctk.CTkFont(size=11),
+                font=get_font(size=11),
                 text_color=COLOR_TEXT_PRIMARY,
                 anchor="w",
                 wraplength=280,
@@ -623,7 +624,7 @@ class ResultsView(ctk.CTkFrame):
             ctk.CTkLabel(
                 frame,
                 text="No documents listed.",
-                font=ctk.CTkFont(size=10),
+                font=get_font(size=10),
                 text_color=COLOR_TEXT_SECONDARY,
             ).grid(row=0, column=0, sticky="w", padx=8, pady=4)
             return
@@ -642,14 +643,14 @@ class ResultsView(ctk.CTkFrame):
             ctk.CTkLabel(
                 card,
                 text="📄",
-                font=ctk.CTkFont(size=16),
+                font=get_font(size=16),
                 width=30,
             ).grid(row=0, column=0, padx=(10, 6), pady=10)
 
             ctk.CTkLabel(
                 card,
                 text=item,
-                font=ctk.CTkFont(size=10, weight="bold"),
+                font=get_font(size=10, weight="bold"),
                 text_color=COLOR_TEXT_PRIMARY,
                 anchor="w",
                 wraplength=180,
@@ -696,7 +697,7 @@ class ResultsView(ctk.CTkFrame):
         toast = ctk.CTkLabel(
             self,
             text=message,
-            font=ctk.CTkFont(size=11, weight="bold"),
+            font=get_font(size=11, weight="bold"),
             text_color="#ffffff",
             fg_color="#1c2d4a",
             corner_radius=8,

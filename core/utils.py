@@ -50,6 +50,36 @@ COLOR_DANGER = "#f85149"
 COLOR_ACTIVE_ROW = "#1c2d4a"
 
 # ---------------------------------------------------------------------------
+# Font cache — avoids creating duplicate CTkFont objects
+# ---------------------------------------------------------------------------
+_font_cache: dict[tuple[str | None, int, str], "ctk.CTkFont"] = {}
+
+
+def get_font(
+    size: int,
+    weight: str = "normal",
+    family: str | None = None,
+) -> "ctk.CTkFont":
+    """
+    Return a cached CTkFont instance for the given parameters.
+
+    Eliminates redundant OS font registrations that occur when the same
+    CTkFont configuration is instantiated multiple times across views.
+    """
+    import customtkinter as ctk  # deferred to avoid circular import at module level
+
+    cache_key = (family, size, weight)
+    if cache_key not in _font_cache:
+        kwargs: dict[str, Any] = {"size": size}
+        if weight != "normal":
+            kwargs["weight"] = weight
+        if family is not None:
+            kwargs["family"] = family
+        _font_cache[cache_key] = ctk.CTkFont(**kwargs)
+    return _font_cache[cache_key]
+
+
+# ---------------------------------------------------------------------------
 # JSON cleanup helpers
 # ---------------------------------------------------------------------------
 

@@ -11,6 +11,7 @@ interleaving table data at the correct vertical position within each page.
 
 from __future__ import annotations
 
+import gc
 import io
 from typing import NamedTuple
 
@@ -137,7 +138,14 @@ def parse_pdf(pdf_path: str) -> str:
                     "\n".join(text for _, text in page_parts)
                 )
 
+                # Release page-level resources to reduce peak memory
+                del word_list, line_map, page_parts
+                del fitz_page, plumber_page
+
         finally:
             fitz_doc.close()
+
+    # Nudge the garbage collector after releasing both document handles
+    gc.collect()
 
     return "\n\n--- PAGE BREAK ---\n\n".join(full_content_parts)

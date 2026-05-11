@@ -33,6 +33,7 @@ from core.utils import (
     COLOR_DANGER,
     COLOR_TEXT_PRIMARY,
     COLOR_TEXT_SECONDARY,
+    get_font,
 )
 from views.processing_view import ProcessingView
 from views.results_view import ResultsView
@@ -77,7 +78,7 @@ class _LoadingOverlay(ctk.CTkFrame):
         self._spinner_label = ctk.CTkLabel(
             centre,
             text=self._SPINNER_FRAMES[0],
-            font=ctk.CTkFont(size=52),
+            font=get_font(size=52),
             text_color=COLOR_ACCENT_BLUE,
         )
         self._spinner_label.grid(row=0, column=0, pady=(0, 10))
@@ -85,7 +86,7 @@ class _LoadingOverlay(ctk.CTkFrame):
         self._status_label = ctk.CTkLabel(
             centre,
             text="Please wait...",
-            font=ctk.CTkFont(size=13),
+            font=get_font(size=13),
             text_color=COLOR_TEXT_SECONDARY,
         )
         self._status_label.grid(row=1, column=0)
@@ -124,6 +125,10 @@ class _LoadingOverlay(ctk.CTkFrame):
             self._after_id = None
 
     def _animate(self) -> None:
+        # Guard: skip animation tick if overlay is not visible
+        if not self.winfo_viewable():
+            self._after_id = self.after(self._SPINNER_INTERVAL_MS, self._animate)
+            return
         self._spinner_label.configure(text=self._SPINNER_FRAMES[self._frame_idx])
         self._frame_idx = (self._frame_idx + 1) % len(self._SPINNER_FRAMES)
         self._after_id = self.after(self._SPINNER_INTERVAL_MS, self._animate)
@@ -148,6 +153,9 @@ class TenderAnalyzerApp:
     # Long enough to render one spinner frame, short enough to feel instant.
     _TRANSITION_DELAY_MS = 250
 
+    # Minimum seconds between consecutive Ollama health checks
+    _HEALTH_CHECK_COOLDOWN_S = 10.0
+
     def __init__(self) -> None:
         self._root = ctk.CTk()
         self._root.title(APP_TITLE)
@@ -157,6 +165,13 @@ class TenderAnalyzerApp:
         # Analysis cancellation flag
         self._cancel_requested = threading.Event()
         self._analysis_thread: threading.Thread | None = None
+
+        # Health check debounce timestamp
+        self._last_health_check: float = 0.0
+
+        # Lazy view flags — defer heavy widget trees until first use
+        self._processing_view_built: bool = False
+        self._results_view_built: bool = False
 
         self._setup_layout()
         self._build_views()
@@ -174,11 +189,12 @@ class TenderAnalyzerApp:
 
     def _build_views(self) -> None:
         """
-        Build the sidebar and stack all content views in a shared container.
+        Build the sidebar, upload view, and lightweight placeholders.
 
-        All views + the loading overlay are placed at the same grid position
-        (row=0, col=0) inside _content_frame. Switching views uses tkraise()
-        instead of grid_forget/grid, which eliminates the blank-frame flash.
+        ProcessingView and ResultsView are constructed lazily on first
+        navigation to avoid building ~100 widgets the user doesn't see.
+        All views + the loading overlay share the same grid cell (row=0,
+        col=0) inside _content_frame. Switching uses tkraise().
         """
         self._sidebar = SidebarFrame(
             self._root,
@@ -193,24 +209,18 @@ class TenderAnalyzerApp:
         self._content_frame.grid_columnconfigure(0, weight=1)
         self._content_frame.grid_rowconfigure(0, weight=1)
 
-        # Instantiate all views in the same cell — Z-order determines what's visible
+        # Upload view — always built (it's the landing page)
         self._upload_view = UploadView(
             self._content_frame,
             on_analyze=self._start_analysis,
         )
         self._upload_view.grid(row=0, column=0, sticky="nsew")
 
-        self._processing_view = ProcessingView(
-            self._content_frame,
-            on_cancel=self._handle_cancel,
-        )
-        self._processing_view.grid(row=0, column=0, sticky="nsew")
-
-        self._results_view = ResultsView(
-            self._content_frame,
-            on_new_analysis=self._navigate_to_upload,
-        )
-        self._results_view.grid(row=0, column=0, sticky="nsew")
+        # Processing and results views — lazy placeholders
+        # They are real CTkFrame instances gridded at the same cell,
+        # but their internal widget trees are built on first _ensure_*() call.
+        self._processing_view: ProcessingView | None = None
+        self._results_view: ResultsView | None = None
 
         # Loading overlay — always on top during transitions
         self._loading_overlay = _LoadingOverlay(self._content_frame)
@@ -218,6 +228,26 @@ class TenderAnalyzerApp:
 
         # Start with upload view on top
         self._upload_view.tkraise()
+
+    def _ensure_processing_view(self) -> ProcessingView:
+        """Build the ProcessingView on first access (lazy init)."""
+        if self._processing_view is None:
+            self._processing_view = ProcessingView(
+                self._content_frame,
+                on_cancel=self._handle_cancel,
+            )
+            self._processing_view.grid(row=0, column=0, sticky="nsew")
+        return self._processing_view
+
+    def _ensure_results_view(self) -> ResultsView:
+        """Build the ResultsView on first access (lazy init)."""
+        if self._results_view is None:
+            self._results_view = ResultsView(
+                self._content_frame,
+                on_new_analysis=self._navigate_to_upload,
+            )
+            self._results_view.grid(row=0, column=0, sticky="nsew")
+        return self._results_view
 
     # ------------------------------------------------------------------
     # View switching
@@ -268,17 +298,22 @@ class TenderAnalyzerApp:
             self._check_ollama_async()
         elif key == "analysis":
             # Show results if available, otherwise go to upload
-            self._show_view(self._results_view)
+            self._show_view(self._ensure_results_view())
         elif key in ("outreach", "support", "settings"):
             # Outreach is a tab inside results_view
-            self._show_view(self._results_view)
+            self._show_view(self._ensure_results_view())
 
     # ------------------------------------------------------------------
     # Ollama health check
     # ------------------------------------------------------------------
 
     def _check_ollama_async(self) -> None:
-        """Run the Ollama health check on a daemon thread."""
+        """Run the Ollama health check on a daemon thread (debounced)."""
+        now = time.perf_counter()
+        if now - self._last_health_check < self._HEALTH_CHECK_COOLDOWN_S:
+            return  # Skip — a recent check already ran
+        self._last_health_check = now
+
         def _check() -> None:
             is_online = check_ollama_connection()
             self._root.after(0, self._upload_view.update_engine_status, is_online)
@@ -310,12 +345,13 @@ class TenderAnalyzerApp:
 
     def _prepare_processing_view(self, pdf_path: str) -> None:
         """Reset the processing view and start the analysis thread (main thread)."""
+        pv = self._ensure_processing_view()
         self._cancel_requested.clear()
-        self._processing_view.reset()
+        pv.reset()
         self._loading_overlay.hide()
-        self._show_view(self._processing_view)
+        self._show_view(pv)
         self._sidebar.set_active("analysis")
-        self._processing_view.start_spinner()
+        pv.start_spinner()
 
         self._analysis_thread = threading.Thread(
             target=self._run_analysis_pipeline,
@@ -400,9 +436,10 @@ class TenderAnalyzerApp:
 
     def _on_pipeline_success(self, result: dict[str, Any]) -> None:
         # Populate first (off-screen), then show with a spinner transition
-        self._results_view.populate(result)
+        rv = self._ensure_results_view()
+        rv.populate(result)
         self._show_view_with_spinner(
-            self._results_view,
+            rv,
             message="Building results...",
             delay_ms=300,
         )
@@ -439,14 +476,14 @@ class TenderAnalyzerApp:
         ctk.CTkLabel(
             dialog,
             text="⚠",
-            font=ctk.CTkFont(size=48),
+            font=get_font(size=48),
             text_color=COLOR_DANGER,
         ).grid(row=0, column=0, pady=(28, 4))
 
         ctk.CTkLabel(
             dialog,
             text="Ollama is not running",
-            font=ctk.CTkFont(size=16, weight="bold"),
+            font=get_font(size=16, weight="bold"),
             text_color=COLOR_TEXT_PRIMARY,
         ).grid(row=1, column=0)
 
@@ -457,7 +494,7 @@ class TenderAnalyzerApp:
                 "at http://localhost:11434\n\n"
                 "Please start Ollama and try again."
             ),
-            font=ctk.CTkFont(size=11),
+            font=get_font(size=11),
             text_color=COLOR_TEXT_SECONDARY,
             justify="center",
         ).grid(row=2, column=0, pady=(10, 20))
@@ -486,14 +523,14 @@ class TenderAnalyzerApp:
         ctk.CTkLabel(
             dialog,
             text="✗  Error",
-            font=ctk.CTkFont(size=16, weight="bold"),
+            font=get_font(size=16, weight="bold"),
             text_color=COLOR_DANGER,
         ).grid(row=0, column=0, pady=(24, 8))
 
         # Use a textbox so long error messages (e.g. the 500 explanation) are readable
         msg_box = ctk.CTkTextbox(
             dialog,
-            font=ctk.CTkFont(size=11),
+            font=get_font(size=11),
             fg_color=COLOR_CARD_BG,
             text_color=COLOR_TEXT_SECONDARY,
             wrap="word",
