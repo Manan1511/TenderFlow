@@ -7,8 +7,6 @@ Provides a health check and the main analysis generation call.
 
 from __future__ import annotations
 
-import json
-
 import requests
 
 from core.utils import parse_strict_json
@@ -21,6 +19,11 @@ OLLAMA_API_URL = f"{OLLAMA_BASE_URL}/api/generate"
 MODEL_NAME = "gemma4:e4b"
 REQUEST_TIMEOUT_SECONDS = 300
 HEALTH_CHECK_TIMEOUT_SECONDS = 5
+
+# Maximum characters of parsed PDF text to send to the model.
+# Prevents context-window overflow (OOM) which manifests as Ollama 500 errors.
+# ~8 000 chars ≈ ~2 000 tokens — safe for gemma4:e4b's 8k context window.
+MAX_PROMPT_CHARS = 8_000
 
 # ---------------------------------------------------------------------------
 # System prompt
@@ -68,6 +71,25 @@ def check_ollama_connection() -> bool:
         return False
 
 
+def _truncate_text(text: str) -> tuple[str, bool]:
+    """
+    Truncate *text* to MAX_PROMPT_CHARS to stay within the model context window.
+
+    Returns:
+        (text, was_truncated) — The (possibly shortened) text and a flag.
+    """
+    if len(text) <= MAX_PROMPT_CHARS:
+        return text, False
+    # Preserve the start (cover page, fees) and end (schedules) of the doc
+    half = MAX_PROMPT_CHARS // 2
+    truncated = (
+        text[:half]
+        + "\n\n[... middle section omitted for brevity ...]\n\n"
+        + text[-half:]
+    )
+    return truncated, True
+
+
 def generate_analysis(parsed_text: str) -> dict:
     """
     Send the parsed tender text to the local Ollama model and return a
@@ -80,34 +102,69 @@ def generate_analysis(parsed_text: str) -> dict:
         A dict with the keys defined in REQUIRED_JSON_KEYS (see utils.py).
 
     Raises:
-        requests.ConnectionError:  If Ollama is not reachable.
-        requests.Timeout:          If the request exceeds REQUEST_TIMEOUT_SECONDS.
-        requests.RequestException: For any other HTTP-level error.
-        ValueError:                If the response JSON is malformed or incomplete.
+        ConnectionError: If Ollama is unreachable or returns a server error.
+        requests.Timeout: If the request exceeds REQUEST_TIMEOUT_SECONDS.
+        ValueError: If the response JSON is malformed or incomplete.
     """
+    safe_text, was_truncated = _truncate_text(parsed_text)
+
     payload = {
         "model": MODEL_NAME,
         "system": _SYSTEM_PROMPT,
         "prompt": (
             "Extract the required information from the following tender document "
             "and return ONLY the JSON object as instructed.\n\n"
-            f"TENDER DOCUMENT:\n{parsed_text}"
+            f"TENDER DOCUMENT:\n{safe_text}"
         ),
         "stream": False,
         "options": {
-            "temperature": 0.1,   # Low temperature for deterministic extraction
-            "num_predict": 4096,  # Enough tokens for a complete JSON response
+            "temperature": 0.1,
+            "num_predict": 2048,  # Capped — a valid JSON response fits in <1k tokens
         },
     }
 
-    response = requests.post(
-        OLLAMA_API_URL,
-        json=payload,
-        timeout=REQUEST_TIMEOUT_SECONDS,
-    )
+    try:
+        response = requests.post(
+            OLLAMA_API_URL,
+            json=payload,
+            timeout=REQUEST_TIMEOUT_SECONDS,
+        )
+    except requests.ConnectionError as exc:
+        raise ConnectionError(
+            "Cannot reach Ollama at localhost:11434. "
+            "Make sure Ollama is running."
+        ) from exc
+    except requests.Timeout as exc:
+        raise requests.Timeout(
+            f"Ollama did not respond within {REQUEST_TIMEOUT_SECONDS}s. "
+            "The model may still be loading — try again in a moment."
+        ) from exc
+
+    # Translate HTTP errors into clear, actionable messages
+    if response.status_code == 500:
+        # Most common cause: model name wrong, OOM, or model not pulled
+        raise ConnectionError(
+            f"Ollama returned a 500 Internal Server Error.\n\n"
+            f"Likely causes:\n"
+            f"  • Model '{MODEL_NAME}' is not pulled — run: ollama pull {MODEL_NAME}\n"
+            f"  • Ollama ran out of memory processing this document\n"
+            f"  • The model crashed — restart Ollama and try again"
+        )
+    if response.status_code == 404:
+        raise ConnectionError(
+            f"Model '{MODEL_NAME}' was not found on this Ollama instance.\n"
+            f"Pull it first:  ollama pull {MODEL_NAME}"
+        )
+
     response.raise_for_status()
 
     response_data: dict = response.json()
     raw_text: str = response_data.get("response", "")
+
+    if not raw_text.strip():
+        raise ValueError(
+            "Ollama returned an empty response. "
+            "The model may have timed out internally. Please try again."
+        )
 
     return parse_strict_json(raw_text)
