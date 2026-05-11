@@ -73,22 +73,33 @@ class ResultsView(ctk.CTkFrame):
         # --- Top bar ---
         self._build_top_bar()
 
-        # --- Tab view ---
+        # --- Tab view — styled for prominence ---
         tab_view = ctk.CTkTabview(
             self,
             fg_color=COLOR_CARD_BG,
+            # Active tab: vivid blue pill
             segmented_button_selected_color=COLOR_ACCENT_BLUE,
-            segmented_button_selected_hover_color="#1a5dc8",
-            segmented_button_unselected_color="#161b22",
+            segmented_button_selected_hover_color="#388bfd",
+            # Inactive tab: slightly lighter than card bg so it reads as a button
+            segmented_button_unselected_color="#1a2030",
             segmented_button_unselected_hover_color="#1c2d4a",
-            border_color=COLOR_CARD_BORDER,
-            border_width=1,
+            # Outer card border
+            border_color=COLOR_ACCENT_BLUE,
+            border_width=2,
             corner_radius=12,
         )
         tab_view.grid(row=1, column=0, sticky="nsew", padx=36, pady=(0, 28))
 
-        tab_analysis = tab_view.add("  Analysis  ")
-        tab_outreach = tab_view.add("  Outreach  ")
+        # Enlarge the segmented button bar for better visibility
+        tab_view._segmented_button.configure(
+            font=ctk.CTkFont(size=13, weight="bold"),
+            height=40,
+            corner_radius=8,
+            border_width=2,
+        )
+
+        tab_analysis = tab_view.add("  📊  Analysis  ")
+        tab_outreach = tab_view.add("  ✉️  Outreach  ")
 
         tab_analysis.grid_columnconfigure(0, weight=1)
         tab_analysis.grid_rowconfigure(1, weight=1)
@@ -254,8 +265,8 @@ class ResultsView(ctk.CTkFrame):
         )
         card.grid(row=1, column=0, sticky="nsew", padx=(12, 6), pady=(0, 12))
         card.grid_columnconfigure(0, weight=1)
+        # Row 2 is the unified scrollable frame — it takes all remaining height
         card.grid_rowconfigure(2, weight=1)
-        card.grid_rowconfigure(4, weight=1)
 
         ctk.CTkLabel(
             card,
@@ -268,33 +279,17 @@ class ResultsView(ctk.CTkFrame):
             row=1, column=0, sticky="ew",
         )
 
-        # Manufacturer docs
-        ctk.CTkLabel(
-            card,
-            text="MANUFACTURER DOCUMENTS",
-            font=ctk.CTkFont(size=9, weight="bold"),
-            text_color=COLOR_TEXT_SECONDARY,
-        ).grid(row=2, column=0, sticky="w", padx=16, pady=(10, 2))
-
-        self._man_docs_frame = ctk.CTkScrollableFrame(
-            card, fg_color="transparent", height=120
+        # Single scrollable frame for BOTH sections — no fixed height, fills card
+        self._compliance_scroll = ctk.CTkScrollableFrame(
+            card, fg_color="transparent"
         )
-        self._man_docs_frame.grid(row=3, column=0, sticky="nsew", padx=8, pady=(0, 4))
-        self._man_docs_frame.grid_columnconfigure(0, weight=1)
+        self._compliance_scroll.grid(row=2, column=0, sticky="nsew", padx=8, pady=(4, 8))
+        self._compliance_scroll.grid_columnconfigure(0, weight=1)
 
-        # Bidder docs
-        ctk.CTkLabel(
-            card,
-            text="BIDDER DOCUMENTS",
-            font=ctk.CTkFont(size=9, weight="bold"),
-            text_color=COLOR_TEXT_SECONDARY,
-        ).grid(row=4, column=0, sticky="w", padx=16, pady=(8, 2))
-
-        self._bid_docs_frame = ctk.CTkScrollableFrame(
-            card, fg_color="transparent", height=120
-        )
-        self._bid_docs_frame.grid(row=5, column=0, sticky="nsew", padx=8, pady=(0, 12))
-        self._bid_docs_frame.grid_columnconfigure(0, weight=1)
+        # Create placeholder sub-frame references (populated in populate())
+        # _man_docs_frame and _bid_docs_frame now point inside _compliance_scroll
+        self._man_docs_frame = self._compliance_scroll
+        self._bid_docs_frame = self._compliance_scroll
 
     def _build_supply_card(self, parent: ctk.CTkFrame) -> None:
         card = ctk.CTkFrame(
@@ -436,15 +431,13 @@ class ResultsView(ctk.CTkFrame):
         self._emd_label.configure(text=data.get("emd_fee") or "Not specified")
         self._proc_fee_label.configure(text=data.get("processing_fee") or "Not specified")
 
-        # Manufacturer docs
-        self._clear_frame(self._man_docs_frame)
+        # Compliance checklist — both sections in one unified scrollable frame
+        self._clear_frame(self._compliance_scroll)
         man_docs: list[str] = data.get("manufacturer_documents", [])
-        self._populate_checklist(self._man_docs_frame, man_docs)
-
-        # Bidder docs
-        self._clear_frame(self._bid_docs_frame)
         bid_docs: list[str] = data.get("bidder_documents", [])
-        self._populate_checklist(self._bid_docs_frame, bid_docs)
+        self._populate_compliance_unified(
+            self._compliance_scroll, man_docs, bid_docs
+        )
 
         # Supply requirements
         self._clear_frame(self._supply_frame)
@@ -468,8 +461,7 @@ class ResultsView(ctk.CTkFrame):
         self._emd_label.configure(text="—")
         self._proc_fee_label.configure(text="—")
         for frame in (
-            self._man_docs_frame,
-            self._bid_docs_frame,
+            self._compliance_scroll,
             self._supply_frame,
             self._req_docs_frame,
         ):
@@ -483,51 +475,105 @@ class ResultsView(ctk.CTkFrame):
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _clear_frame(frame: ctk.CTkScrollableFrame) -> None:
+    def _clear_frame(frame: ctk.CTkScrollableFrame | ctk.CTkFrame) -> None:
         for widget in frame.winfo_children():
             widget.destroy()
 
-    def _populate_checklist(
-        self, frame: ctk.CTkScrollableFrame, items: list[str]
+    def _populate_compliance_unified(
+        self,
+        scroll: ctk.CTkScrollableFrame,
+        man_docs: list[str],
+        bid_docs: list[str],
     ) -> None:
-        """Render each item as a checkbox-style card row."""
-        if not items:
+        """
+        Render manufacturer and bidder documents inside a single shared
+        scrollable frame, separated by a section header each.
+        """
+        row_cursor = 0
+
+        # --- Manufacturer section header ---
+        ctk.CTkLabel(
+            scroll,
+            text="MANUFACTURER DOCUMENTS",
+            font=ctk.CTkFont(size=9, weight="bold"),
+            text_color=COLOR_TEXT_SECONDARY,
+        ).grid(row=row_cursor, column=0, sticky="w", padx=6, pady=(8, 2))
+        row_cursor += 1
+
+        if man_docs:
+            for item in man_docs:
+                self._checklist_row(scroll, item, row_cursor)
+                row_cursor += 1
+        else:
             ctk.CTkLabel(
-                frame,
+                scroll,
                 text="None specified.",
                 font=ctk.CTkFont(size=10),
                 text_color=COLOR_TEXT_SECONDARY,
-            ).grid(row=0, column=0, sticky="w", padx=8, pady=4)
-            return
+            ).grid(row=row_cursor, column=0, sticky="w", padx=10, pady=2)
+            row_cursor += 1
 
-        for idx, item in enumerate(items):
-            row = ctk.CTkFrame(
-                frame,
-                fg_color=COLOR_CARD_BG,
-                corner_radius=6,
-                border_color=COLOR_CARD_BORDER,
-                border_width=1,
-            )
-            row.grid(row=idx, column=0, sticky="ew", pady=3, padx=2)
-            row.grid_columnconfigure(1, weight=1)
+        # Spacer between sections
+        ctk.CTkFrame(
+            scroll, fg_color=COLOR_CARD_BORDER, height=1, corner_radius=0
+        ).grid(row=row_cursor, column=0, sticky="ew", padx=4, pady=(8, 0))
+        row_cursor += 1
 
+        # --- Bidder section header ---
+        ctk.CTkLabel(
+            scroll,
+            text="BIDDER DOCUMENTS",
+            font=ctk.CTkFont(size=9, weight="bold"),
+            text_color=COLOR_TEXT_SECONDARY,
+        ).grid(row=row_cursor, column=0, sticky="w", padx=6, pady=(8, 2))
+        row_cursor += 1
+
+        if bid_docs:
+            for item in bid_docs:
+                self._checklist_row(scroll, item, row_cursor)
+                row_cursor += 1
+        else:
             ctk.CTkLabel(
-                row,
-                text="○",
-                font=ctk.CTkFont(size=14),
+                scroll,
+                text="None specified.",
+                font=ctk.CTkFont(size=10),
                 text_color=COLOR_TEXT_SECONDARY,
-                width=24,
-            ).grid(row=0, column=0, padx=(10, 6), pady=8)
+            ).grid(row=row_cursor, column=0, sticky="w", padx=10, pady=2)
 
-            ctk.CTkLabel(
-                row,
-                text=item,
-                font=ctk.CTkFont(size=11),
-                text_color=COLOR_TEXT_PRIMARY,
-                anchor="w",
-                wraplength=280,
-                justify="left",
-            ).grid(row=0, column=1, sticky="w", pady=8, padx=(0, 10))
+    def _checklist_row(
+        self,
+        parent: ctk.CTkScrollableFrame,
+        text: str,
+        grid_row: int,
+    ) -> None:
+        """Render one checkbox-style card row at *grid_row*."""
+        row = ctk.CTkFrame(
+            parent,
+            fg_color=COLOR_CARD_BG,
+            corner_radius=6,
+            border_color=COLOR_CARD_BORDER,
+            border_width=1,
+        )
+        row.grid(row=grid_row, column=0, sticky="ew", pady=3, padx=2)
+        row.grid_columnconfigure(1, weight=1)
+
+        ctk.CTkLabel(
+            row,
+            text="○",
+            font=ctk.CTkFont(size=14),
+            text_color=COLOR_TEXT_SECONDARY,
+            width=24,
+        ).grid(row=0, column=0, padx=(10, 6), pady=8)
+
+        ctk.CTkLabel(
+            row,
+            text=text,
+            font=ctk.CTkFont(size=11),
+            text_color=COLOR_TEXT_PRIMARY,
+            anchor="w",
+            wraplength=300,
+            justify="left",
+        ).grid(row=0, column=1, sticky="w", pady=8, padx=(0, 10))
 
     def _populate_supply_list(
         self, frame: ctk.CTkScrollableFrame, items: list[str]
